@@ -1,0 +1,18 @@
+
+<library path="lib/libdisney_demo">
+
+
+  <class name="disney_demo/TeleoperationControllerMT" type="disney_demo::TeleoperationControllerMT" base_class_type="controller_interface::ControllerBase">
+    <description>
+      To add some comments about the controller
+    </description>
+  </class>
+
+  <class name="disney_demo/TeleoperationControllerMTEffort" type="disney_demo::TeleoperationControllerMTEffort" base_class_type="controller_interface::ControllerBase">
+    <description>
+      To add some comments about the controller
+    </description>
+  </class>
+
+
+  </library>
