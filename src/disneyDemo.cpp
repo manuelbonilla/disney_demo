@@ -114,12 +114,19 @@ void disneyDemo::managerKuka()
 {
     std::cout<<"\033[32m\033[1mBUMB! \033[0m\n";
 
+    nh_.param<std::vector<double>>("home1", home1_);
+    nh_.param<std::vector<double>>("back1", back1_);
+
+    nh_.param<std::vector<double>>("home2", home2_);
+    nh_.param<std::vector<double>>("back2", back2_);
+
+
 	if(go_)
 	{	
 		publisher(back1_, back2_);
 		publisher(home1_, home2_);
 	}
-	
+
 	go_ = false;
 	ros::spinOnce();
 }

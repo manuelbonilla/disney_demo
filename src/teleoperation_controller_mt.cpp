@@ -265,7 +265,7 @@ void TeleoperationControllerMT::update(const ros::Time& time, const ros::Duratio
         //     if (joint_des_states_.q(i) > joint_limits_.max(i))
         //         joint_des_states_.q(i) = joint_limits_.max(i);
         // }
-        if (Equal(x_, x_des_, 0.06))
+        if (Equal(x_, x_des_, 0.1))
         {
             std_msgs::Bool bool_msg;                        
             bool_msg.data = true;

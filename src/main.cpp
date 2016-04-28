@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 
 
     std::cout <<"\033[34m\033[1mStart DisneyDemo\033[0m" << std::endl;
-    k.firstMovement();
+    // k.firstMovement();
 
   	bool exit_flag = false;
 

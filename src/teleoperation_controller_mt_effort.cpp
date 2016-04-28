@@ -58,6 +58,7 @@ bool TeleoperationControllerMTEffort::init(hardware_interface::EffortJointInterf
     pub_error2 = nh_.advertise<std_msgs::Float64MultiArray>("error2", 1000);
     //sub_command_2 = nh_.subscribe("command2", 1, &TeleoperationControllerMTEffort::command2, this);
     pub_check = nh_.advertise<std_msgs::Bool>("check", 1000);
+    pub_vel = nh_.advertise<std_msgs::Float64MultiArray>("des_velocity", 1000);
 
     sub_start_controller = nh_.subscribe("start_controller", 1, &TeleoperationControllerMTEffort::startControllerCallBack, this);
     nh_.param<double>("alpha1", alpha1, 1);
@@ -88,6 +89,8 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
 
     std_msgs::Float64MultiArray error_msg;
     std_msgs::Float64MultiArray error_msg2;
+    std_msgs::Float64MultiArray q_des;
+
     KDL::Twist x_err_2;
     for (int i = 0; i < joint_handles_.size(); i++)
     {
@@ -100,7 +103,7 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
         jnt_to_jac_solver_->JntToJac(joint_msr_states_.q, J_);
 
         // computing J_pinv_
-        pseudo_inverse(J_.data, J_pinv_);
+        pseudo_inverse(J_.data, J_pinv_, false);
 
         // computing forward kinematics
         fk_pos_solver_->JntToCart(joint_msr_states_.q, x_);
@@ -203,7 +206,7 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
 
             Eigen::Matrix<double, 3, 7> J_2_short = Eigen::Matrix<double, 3, 7>::Zero();
             J_2_short = J_2.data.block<3, 7>(0, 0);
-            pseudo_inverse(J_2_short, J_pinv_2);
+            pseudo_inverse(J_2_short, J_pinv_2, false);
             Eigen::Matrix<double, 7, 3> NullSpace = Eigen::Matrix<double, 7, 3>::Zero();
             NullSpace = P * J_pinv_2;
 
@@ -249,13 +252,20 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
 
         }
 
-        saturateJointVelocities(joint_des_states_.qdot);
+        saturateJointVelocities(joint_des_states_.qdot, 0.2);
 
         // integrating q_dot -> getting q (Euler method)
         for (int i = 0; i < joint_handles_.size(); i++)
             joint_des_states_.q(i) += period.toSec() * joint_des_states_.qdot(i);
 
         saturateJointPositions(joint_des_states_.q);
+    
+        for (int i = 0; i < joint_handles_.size(); i++)
+        {
+            q_des.data.push_back(joint_des_states_.qdot(i));
+        }
+        
+
         // joint limits saturation
         // for (int i = 0;  i < joint_handles_.size(); i++)
         // {
@@ -294,7 +304,7 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
 
 
 
-   
+    pub_vel.publish(q_des);
     pub_error.publish(error_msg);
     pub_error2.publish(error_msg2);
 
@@ -342,7 +352,7 @@ void TeleoperationControllerMTEffort::command2(const geometry_msgs::Pose::ConstP
 
     tf::Transform CollisionTransform2;
     tf::transformKDLToTF( frame_des_, CollisionTransform2);
-    elbow_reference.sendTransform( tf::StampedTransform( CollisionTransform2, ros::Time::now(), "world", "elbow_reference") );
+    elbow_reference.sendTransform( tf::StampedTransform( CollisionTransform2, ros::Time::now(), "vito_anchor", "elbow_reference") );
 }
 
 
