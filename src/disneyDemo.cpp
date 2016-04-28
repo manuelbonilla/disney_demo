@@ -4,11 +4,30 @@
 /* Constructor */
 disneyDemo::disneyDemo()
 {
-	initVariables();
+	nh_.param<std::string>("/left_arm/controller", control_topic_left_, "disney_demo_controller_mt");
+    pub_start_robot_ = nh_.advertise<std_msgs::Bool>("/left_arm/"+ control_topic_left_ + "/start_controller", 100);
+	pub1_ = nh_.advertise<geometry_msgs::Pose>("/left_arm/"+ control_topic_left_ +"/command1", 3); 	
+	pub2_ = nh_.advertise<geometry_msgs::Pose>("/left_arm/"+ control_topic_left_ +"/command2", 3); 	
+	
+	sub_check_ = nh_.subscribe("left_arm/"+control_topic_left_ +"/check", 1, &disneyDemo::check, this);
+	sub_go_    = nh_.subscribe("go",1,&disneyDemo::go, this);
+
+	check_ = false;
+	go_    = false;
+
+	home1_.resize(7);
+    back1_.resize(7);
+    nh_.param<std::vector<double>>("home1", home1_, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("back1", back1_, std::vector<double>{0,0,0,0,0,0,0});
+
+   	home2_.resize(7);
+    back2_.resize(7);
+    nh_.param<std::vector<double>>("home2", home2_, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("back2", back2_, std::vector<double>{0,0,0,0,0,0,0});
 }
 
 
-/* Constructor */
+/* Destructor */
 disneyDemo::~disneyDemo()
 {
     // nothing to be done
@@ -26,16 +45,64 @@ disneyDemo::~disneyDemo()
 
 
 // =============================================================================================
-//																				   initVariables
+//																				   		initDemo
 // =============================================================================================
-void disneyDemo::initVariables()
+void disneyDemo::initDemo()
 {
-	// pub_ = nh_.advertise<lwr_controllers::PoseRPY>("left_arm/one_task_inverse_dynamics/command", 3); 	
-	pub_ = nh_.advertise<lwr_controllers::PoseRPY>("left_arm/one_task_inverse_kinematics/command", 3); 	
+	ros::spinOnce();
 
-	// sub_ = nh_.subscribe("left_arm/one_task_inverse_dinamics/check", 1, &disneyDemo::checkMovement, this);
+	//controller switch
+	ros::ServiceClient client;
+	ROS_INFO_STREAM("Initializing Controllers");
+	controller_manager_msgs::SwitchController switch_srv;
+	switch_srv.request.start_controllers.push_back(control_topic_left_);
+	switch_srv.request.stop_controllers.push_back("joint_trajectory_controller");
+	switch_srv.request.strictness = 2;
 
-	checkMovement_value_ = false;
+	client = nh_.serviceClient<controller_manager_msgs::SwitchController>("/left_arm/controller_manager/switch_controller");
+	if (!client.call(switch_srv))
+    {
+      	ROS_ERROR_STREAM("Not possible to switch left_arm control to: " << control_topic_left_.c_str());
+    }
+  	else
+    {
+      	if (switch_srv.response.ok == true)
+        {
+        	ROS_INFO_STREAM("left_arm control switched to: " << control_topic_left_.c_str());
+        }
+      	else
+        {
+          	ROS_ERROR_STREAM("Not possible to switch left_arm control to: " << control_topic_left_.c_str());
+        }
+    }
+    ros::spinOnce();
+    sleep(1);
+
+
+    // start controller
+	std_msgs::Bool bool_msg;						
+    bool_msg.data = true;
+
+    pub_start_robot_.publish(bool_msg);
+    ROS_INFO_STREAM("Starting Robot");
+    ros::spinOnce();
+    sleep(1);
+}
+
+// =============================================================================================
+//																				   firstMovement
+// =============================================================================================
+void disneyDemo::firstMovement()
+{
+	std::vector<double> first1_, first2_; 
+	
+	first1_.resize(7);
+    first2_.resize(7);
+    nh_.param<std::vector<double>>("first1", first1_, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("first2", first2_, std::vector<double>{0,0,0,0,0,0,0});
+
+    publisher(first1_,first2_);
+	std::cout << "\033[32m\033[1mFIRST MOVEMENT! \033[0m";
 }
 
 
@@ -45,25 +112,16 @@ void disneyDemo::initVariables()
 // =============================================================================================
 void disneyDemo::managerKuka()
 {
-	bool flag 	   	= false;
-	bool exit_user 	= false;
-	float diff=0;
+    std::cout<<"\033[32m\033[1mBUMB! \033[0m\n";
+
+	if(go_)
+	{	
+		publisher(back1_, back2_);
+		publisher(home1_, home2_);
+	}
 	
-	getTransform(H_vito_EE_, "vito_anchor", "left_arm_base_link");
-	getTransform(H_, "left_arm_7_link","left_hand_palm_link");
-
-	std::vector<double> v;
-	v.resize(7);
-	v[0] = 0;
-	v[1] = 0;
-	v[2] = 0;
-	v[3] = -1.5;
-	v[4] = -1.5;
-	v[5] = 0.5;
-	v[6] = 0;
-
-
-	publisher(v);
+	go_ = false;
+	ros::spinOnce();
 }
 
 
@@ -71,47 +129,43 @@ void disneyDemo::managerKuka()
 // =============================================================================================
 //																				   publisher
 // =============================================================================================
-void disneyDemo::publisher(std::vector<double> v)
+void disneyDemo::publisher(std::vector<double> v1, std::vector<double> v2)
 {
-	Eigen::Vector3d r;
-	Eigen::Vector3d p; 
-	Eigen::Vector3d pp;
-	
-	// r << 0,0,90*(M_PI*180);
-	// p << 0.10, 0.10, 0.10;
 
-	r << v[0], v[1], v[2];
-	p << v[3], v[4], v[5];
+	tf::Quaternion q1, q2;
+	q1.setRPY(v1[0]*(M_PI/180),v1[1]*(M_PI/180),v1[2]*(M_PI/180));
+	q2.setRPY(v2[0]*(M_PI/180),v2[1]*(M_PI/180),v2[2]*(M_PI/180));
 
-	p = H_vito_EE_.R*p + H_vito_EE_.v;
-	// pp <<  -0.002,0.00695,-0.0905;
-	pp = H_vito_EE_.T.topLeftCorner(3,3)*rotZ(r(2))*rotY(r(1))*rotX(r(0)) * pp;
-	p = p+pp;
+	geometry_msgs::Pose local_msg1, local_msg2;
+    local_msg1.position.x = v1[3];
+    local_msg1.position.y = v1[4];
+    local_msg1.position.z = v1[5];
+    local_msg1.orientation.x  = q1.x();
+    local_msg1.orientation.y =  q1.y();
+    local_msg1.orientation.z  = q1.z();
+    local_msg1.orientation.w  = q1.w();
 
-	r = Rot2Angle(H_vito_EE_.T.topLeftCorner(3,3)*rotZ(r(2))*rotY(r(1))*rotX(r(0)));
+    local_msg2.position.x = v2[3];
+    local_msg2.position.y = v2[4];
+    local_msg2.position.z = v2[5];
+    local_msg2.orientation.x  = q2.x();
+    local_msg2.orientation.y =  q2.y();
+    local_msg2.orientation.z  = q2.z();
+    local_msg2.orientation.w  = q2.w();
 
-	std::cout << "final pos: " << p[0] << " " << p[1]<< " " << p[2]<<std::endl; 
 
-	lwr_controllers::PoseRPY local_msg;
-	local_msg.id = 0;
-    local_msg.position.x = p(0);
-    local_msg.position.y = p(1);
-    local_msg.position.z = p(2);
-    local_msg.orientation.roll  = r(0);
-    local_msg.orientation.pitch = r(1);
-    local_msg.orientation.yaw   = r(2);
-
-	pub_.publish(local_msg);
+	pub1_.publish(local_msg1);
+	pub2_.publish(local_msg2);
 	ros::spinOnce();
 
-	// while(!checkMovement_value_)
-	// {
-		// std::cout << "STO ASPETTANDO" << std::endl;
-		ros::spinOnce();
-	// }
 
-	checkMovement_value_ = true;
-	// std::cout << "SONO Fuori" << std::endl;
+	while(!check_ )
+	{
+    	std::cout<<"\033[31m\033[1mMovement! \033[0m\n";
+		ros::spinOnce();
+	}
+
+	check_  = false;
 }
 
 
@@ -119,50 +173,33 @@ void disneyDemo::publisher(std::vector<double> v)
 // =============================================================================================
 //																				   checkMovement
 // =============================================================================================
-void disneyDemo::checkMovement(std_msgs::Bool msg)
-{
-	checkMovement_value_ = msg.data;
+void disneyDemo::check(std_msgs::Bool bool_msg)
+{	
+	check_ = bool_msg.data;
 }
 
-
-
 // =============================================================================================
-//																				  	getTransform
+//																				   	  goMovement
 // =============================================================================================
-void disneyDemo::getTransform(homogeneous_vito& x, std::string link_from, std::string link_to)
-{
-	Eigen::Quaterniond q;
-
-	tf::TransformListener listener;
-	tf::StampedTransform t;
-	
-	
-	try
-	{
-		listener.waitForTransform(link_from, link_to, ros::Time(0), ros::Duration(1)); //ros::Duration(2.5)
-		listener.lookupTransform(link_to,link_from,  ros::Time(0), t);
-	}
-	catch (tf::TransformException ex)
-	{
-		ROS_ERROR("%s",ex.what());
-		ros::Duration(1.0).sleep();
-	}
-
-	tf::quaternionTFToEigen(t.getRotation(), q);
-	tf::vectorTFToEigen(t.getOrigin(), x.v);
-
-	x.R = q.toRotationMatrix();
-	
-	x.T = Eigen::Matrix4d::Identity();
-	x.T.topLeftCorner(3,3)  = x.R;
-	x.T.col(3) = Eigen::Vector4d(x.v(0),x.v(1),x.v(2), 1);
+void disneyDemo::go(std_msgs::Bool m)
+{	
+	go_ = m.data;
 }
 
 
 
 
+
+
+
+
+
+
+
+
+
 // =============================================================================================
-//																				  	   Utilities
+//							PER IL MOMENTO NON LE USO							  	   Utilities
 // =============================================================================================
 Eigen::Vector3d disneyDemo::Rot2Angle(Eigen::Matrix3d R_in)
 {

@@ -98,7 +98,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <export>
-    <controller_interface plugin="${prefix}/demo_disney_controllers.xml"/>
+    <controller_interface plugin="${prefix}/disney_demo_controllers.xml"/>
   </export>   
 
 

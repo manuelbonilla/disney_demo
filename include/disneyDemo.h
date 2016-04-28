@@ -19,6 +19,8 @@
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <std_msgs/Bool.h>
+#include <controller_manager_msgs/SwitchController.h>
+
 
 // utilities
 #include <trajectory_msgs/JointTrajectory.h>
@@ -33,6 +35,7 @@
 #include <kdl_conversions/kdl_msg.h>
 #include <actionlib/client/simple_action_client.h>
 #include <sensor_msgs/LaserScan.h>
+#include <std_msgs/Float64MultiArray.h>
 
 
 // KUKA controllers
@@ -43,18 +46,9 @@
 // Hand Headers
 // #include "qbmove_communications.h"
 
-struct homogeneous_vito
-{
-    // rotation matrix
-    Eigen::Matrix3d R;
-    // traslation vector 
-    Eigen::Vector3d v;
-    // homogeneous matrix
-    Eigen::Matrix4d T;
-};
 
-
-
+#define TH_ERROR_1  0.08    // th 1 for final goal 
+#define TH_ERROR_2  0.05    // th 2 for final goal 
 #define CLOSE_STEP  200     // min hand step close for smoothing close
 
 
@@ -64,39 +58,38 @@ public:
 	disneyDemo();
 	~disneyDemo();
 
-	void managerKuka();
-
+    void firstMovement();
+    void initDemo();
+    void managerKuka();
 
 private:
     //Node handle
     ros::NodeHandle nh_, n_;
-
-    //Message Pub
-    void publisher(std::vector<double> v);
-    ros::Publisher pub_;
-    lwr_controllers::PoseRPY msg_;
-
-    // Message Sub
-    ros::Subscriber sub_;
-    bool checkMovement_value_;
-    void checkMovement(std_msgs::Bool msg);
-    bool my_break_;
+    std::vector<double> home1_, home2_;
+    std::vector<double> back1_, back2_;           
     
 
-    std::vector<double> v_record_;
+    //Message Pub
+    void publisher(std::vector<double> v1, std::vector<double> v2);
+    ros::Publisher pub1_, pub2_, pub_start_robot_;
+
+    // Message Sub
+    ros::Subscriber sub_check_, sub_go_;
+    bool check_, go_;
+    void check(std_msgs::Bool bool_msg);
+    void go(std_msgs::Bool bool_msg);
 
 
-    void initVariables();
-    void getTransform(homogeneous_vito& x, std::string link_from, std::string link_to);
+    std::string control_topic_left_;
+    
 
-
+    // NON UTILIZZATE
     void getInitPosition(std::vector<double> v);  // IMPORTAN have to define EE link 
     Eigen::Vector3d Rot2Angle(Eigen::Matrix3d R_in);
     Eigen::Matrix3d rotX(float x);
     Eigen::Matrix3d rotY(float y);
     Eigen::Matrix3d rotZ(float z);
-    homogeneous_vito H_vito_EE_;  
-    homogeneous_vito H_;
+
 
 };
 

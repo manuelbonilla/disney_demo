@@ -1,6 +1,7 @@
 <launch>
 
-	<!-- <rosparam file="$(find disney_demo)/config/parameters.yaml" command="load"/> -->
+	<rosparam file="$(find disney_demo)/config/parameters.yaml" command="load"/>
+	<rosparam file="$(find disney_demo)/config/controllers_select.yaml" command="load"/>
 	
  	
 	<node  name="disney_demo_node" pkg="disney_demo" type="disney_demo_node" respawn="false" output="screen"/> 

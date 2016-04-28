@@ -74,7 +74,7 @@ namespace disney_demo
 		boost::scoped_ptr<KDL::ChainIkSolverVel_pinv> ik_vel_solver_;
 		boost::scoped_ptr<KDL::ChainIkSolverPos_NR_JL> ik_pos_solver_;
 
-		ros::Publisher pub_error, pub_error2;
+		ros::Publisher pub_error, pub_error2, pub_check;
 		ros::Subscriber sub_start_controller;
 		tf::TransformBroadcaster tf_desired_hand_pose, elbow_reference;
 	};

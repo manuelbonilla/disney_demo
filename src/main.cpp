@@ -30,21 +30,15 @@ int main(int argc, char** argv)
     ros::NodeHandle nh_main;
 
 
-    std::vector<double> home;
-    std::vector<double> start;           
-    home.resize(7);
-    start.resize(7);
-
-    // nh_main.param<std::vector<double>>("home" ,  home, std::vector<double>{0,0,0,0,0,0,0});
-    // nh_main.param<std::vector<double>>("start", start, std::vector<double>{0,0,0,0,0,0,0});
-    // nh_main.param<int>("hand_close", hand_close, 5000);
 
     disneyDemo k;
+    k.initDemo();
     
 
+
     std::cout <<"\033[34m\033[1mStart DisneyDemo\033[0m" << std::endl;
-    getchar();
-  
+    k.firstMovement();
+
   	bool exit_flag = false;
 
     while (!exit_flag)
@@ -58,7 +52,6 @@ int main(int argc, char** argv)
 
 
     std::cout << "\r\n\n\n\033[32m\033[1mEXIT! \033[0m" << std::endl;
-    getchar();
     
     return 0;
 }
