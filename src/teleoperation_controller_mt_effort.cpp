@@ -57,6 +57,7 @@ bool TeleoperationControllerMTEffort::init(hardware_interface::EffortJointInterf
     pub_error = nh_.advertise<std_msgs::Float64MultiArray>("error", 1000);
     pub_error2 = nh_.advertise<std_msgs::Float64MultiArray>("error2", 1000);
     //sub_command_2 = nh_.subscribe("command2", 1, &TeleoperationControllerMTEffort::command2, this);
+    pub_check = nh_.advertise<std_msgs::Bool>("check", 1000);
 
     sub_start_controller = nh_.subscribe("start_controller", 1, &TeleoperationControllerMTEffort::startControllerCallBack, this);
     nh_.param<double>("alpha1", alpha1, 1);
@@ -263,11 +264,20 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
         //     if (joint_des_states_.q(i) > joint_limits_.max(i))
         //         joint_des_states_.q(i) = joint_limits_.max(i);
         // }
+        if (Equal(x_, x_des_, 0.06))
+        {
+            std_msgs::Bool bool_msg;                        
+            bool_msg.data = true;
+            pub_check.publish(bool_msg);
+            ROS_INFO("On target 1");
+            cmd_flag_ = 0;
+        }
 
-        // if (Equal(x_, x_des_, 0.005))
+
+        // if (Equal(x_2, x_des_2, 0.03))
         // {
-        //     ROS_INFO("On target");
-        //     cmd_flag_ = 0;
+        //     ROS_INFO("On target 2");
+        //     // cmd_flag_ = 0;
         // }
     }
 
@@ -282,6 +292,9 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
         error_msg2.data.push_back(x_err_2(i));
     }
 
+
+
+   
     pub_error.publish(error_msg);
     pub_error2.publish(error_msg2);
 
@@ -306,10 +319,9 @@ void TeleoperationControllerMTEffort::command(const geometry_msgs::Pose::ConstPt
 
     tf::Transform CollisionTransform;
     tf::transformKDLToTF( frame_des_, CollisionTransform);
-    tf_desired_hand_pose.sendTransform( tf::StampedTransform( CollisionTransform, ros::Time::now(), "world", "reference") );
-    // cmd_flag_ = 1;
+    tf_desired_hand_pose.sendTransform( tf::StampedTransform( CollisionTransform, ros::Time::now(), "vito_anchor", "reference") );
+    cmd_flag_ = 1;
 }
-
 void TeleoperationControllerMTEffort::command2(const geometry_msgs::Pose::ConstPtr &msg)
 {
     KDL::Frame frame_des_;
