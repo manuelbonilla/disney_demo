@@ -47,7 +47,8 @@
     </group>
 
     <!-- load hardware interface and controller configurations -->
-    <rosparam command="load" file="$(find vito_description)/config/vito_controllers.yaml"/>
+    <!-- <rosparam command="load" file="$(find vito_description)/config/vito_controllers.yaml"/> -->
+    <rosparam command="load" file="$(find disney_demo)/config/vito_controllers_disney.yaml"/>
     <rosparam command="load" file="$(find vito_description)/config/hardware_interfaces.yaml"/>
 
     <!-- publish the environment in moveit -->
