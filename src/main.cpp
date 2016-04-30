@@ -43,8 +43,8 @@ int main(int argc, char** argv)
 
     while (!exit_flag)
     {   
-        k.managerKuka();
-
+        // k.managerKukaSingle();
+        k.managerKukaComplete();
         if(!ros::ok())
          exit_flag = false;
     }

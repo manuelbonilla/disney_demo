@@ -55,7 +55,7 @@ namespace disney_demo
 
 		Eigen::MatrixXd J_pinv_;
 		Eigen::Matrix<double,3,3> skew_;
-		double alpha1, alpha2;
+		double alpha1, alpha2, vel_sat;
 
 		struct quaternion_
 		{

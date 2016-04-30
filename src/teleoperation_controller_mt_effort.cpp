@@ -82,7 +82,7 @@ void TeleoperationControllerMTEffort::starting(const ros::Time& time)
 
 void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::Duration& period)
 {
-   nh_.param<double>("alpha1", alpha1, 1.0);
+    nh_.param<double>("alpha1", alpha1, 1.0);
     nh_.param<double>("alpha2", alpha2, 1.0);
     // ROS_INFO_STREAM("Gains alpha1: " << alpha1 << "\t alpha2: " << alpha2);
 
@@ -177,6 +177,35 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
         /****************************************/
 
         x_err_.rot = x_err_temp.rot;
+        // ROS_INFO_STREAM("Error orientation PRIMA: "  << x_err_.vel.data[0] << " "
+        //                 << x_err_.vel.data[1] << " "
+        //                 << x_err_.vel.data[2]);
+
+        float err_sat = 0.1;
+        if(x_err_.vel.data[0] > err_sat )
+            x_err_.vel.data[0] = err_sat;
+        if(x_err_.vel.data[1] > err_sat )
+            x_err_.vel.data[1] = err_sat;
+        if(x_err_.vel.data[2] > err_sat )
+            x_err_.vel.data[2] = err_sat;
+
+        if(x_err_.vel.data[0] < -err_sat )
+            x_err_.vel.data[0] = -err_sat;
+        if(x_err_.vel.data[1] < -err_sat )
+            x_err_.vel.data[1] = -err_sat;
+        if(x_err_.vel.data[2] < -err_sat )
+            x_err_.vel.data[2] =- err_sat;
+
+
+        // ROS_INFO_STREAM("Error orientation DOPO: "  << x_err_.vel.data[0] << " "
+        //                 << x_err_.vel.data[1] << " "
+        //                 << x_err_.vel.data[2]);
+
+
+        // double scale_err =  VelocityLimit(x_err_, 0.5);
+        // x_err_ = x_err_ * scale_err;
+
+
         for (int i = 0; i < J_pinv_.rows(); i++)
         {
             joint_des_states_.qdot(i) = 0.0;
@@ -212,6 +241,24 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
 
 
             x_err_2.vel = x_des_2.p - x_2.p;
+
+            if(x_err_2.vel.data[0] > err_sat )
+                x_err_2.vel.data[0] = err_sat;
+            if(x_err_2.vel.data[1] > err_sat )
+                x_err_2.vel.data[1] = err_sat;
+            if(x_err_2.vel.data[2] > err_sat )
+                x_err_2.vel.data[2] = err_sat;
+
+            if(x_err_2.vel.data[0] < -err_sat )
+                x_err_2.vel.data[0] = -err_sat;
+            if(x_err_2.vel.data[1] < -err_sat )
+                x_err_2.vel.data[1] = -err_sat;
+            if(x_err_2.vel.data[2] < -err_sat )
+                x_err_2.vel.data[2] =- err_sat;
+
+
+            // double scale_err =  VelocityLimit(x_err_2, 0.5);
+            // x_err_2 = x_err_2 * scale_err;
 
             Eigen::MatrixXd x_err_2_eigen = Eigen::MatrixXd::Zero(3, 1);
             x_err_2_eigen << x_err_2.vel(0), x_err_2.vel(1), x_err_2.vel(2);
@@ -252,7 +299,7 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
 
         }
 
-        saturateJointVelocities(joint_des_states_.qdot, 0.2);
+        saturateJointVelocities(joint_des_states_.qdot, 0.5);
 
         // integrating q_dot -> getting q (Euler method)
         for (int i = 0; i < joint_handles_.size(); i++)
@@ -274,7 +321,7 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
         //     if (joint_des_states_.q(i) > joint_limits_.max(i))
         //         joint_des_states_.q(i) = joint_limits_.max(i);
         // }
-        if (Equal(x_, x_des_, 0.06))
+        if (Equal(x_, x_des_, 0.09))
         {
             std_msgs::Bool bool_msg;                        
             bool_msg.data = true;
@@ -289,15 +336,17 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
         //     ROS_INFO("On target 2");
         //     // cmd_flag_ = 0;
         // }
+       
+        // set controls for joints
+        for (int i = 0; i < joint_handles_.size(); i++)
+        {
+            joint_handles_[i].setCommand(joint_des_states_.q(i));
+        }
     }
 
-    // set controls for joints
-    for (int i = 0; i < joint_handles_.size(); i++)
+
+    for (unsigned int i = 0; i < 6; ++i) 
     {
-        joint_handles_[i].setCommand(joint_des_states_.q(i));
-    }
-
-    for (unsigned int i = 0; i < 6; ++i) {
         error_msg.data.push_back(x_err_(i));
         error_msg2.data.push_back(x_err_2(i));
     }

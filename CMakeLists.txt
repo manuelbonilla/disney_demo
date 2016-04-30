@@ -107,15 +107,26 @@ include_directories(${catkin_INCLUDE_DIRS} include)
 
 # Declare a C++ executable
 add_executable(disney_demo_node src/main.cpp src/disneyDemo.cpp)
-
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(disney_demo_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 # Specify libraries to link a library or executable target against
 target_link_libraries(disney_demo_node
   ${catkin_LIBRARIES}
 )
+
+
+# Declare a C++ executable
+add_executable(read_hand_node src/read_hand.cpp src/qbmove_communications.cpp)
+## Add cmake target dependencies of the executable
+## same as for the library above
+add_dependencies(read_hand_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# Specify libraries to link a library or executable target against
+target_link_libraries(read_hand_node
+  ${catkin_LIBRARIES}  ${catkin_INCLUDE_DIRS}
+)
+
+
 
 
 

@@ -36,6 +36,9 @@
 #include <actionlib/client/simple_action_client.h>
 #include <sensor_msgs/LaserScan.h>
 #include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/Int16.h>
+#include <std_msgs/Float64.h>
+
 
 
 // KUKA controllers
@@ -45,6 +48,13 @@
 
 // Hand Headers
 // #include "qbmove_communications.h"
+
+#define CLOSE_HAND_FAST 1
+#define OPEN_HAND_SLOW  2
+#define CLOSE_HAND_BIT  3
+#define WAITING_BUMP    9 
+
+
 
 
 #define TH_ERROR_1  0.08    // th 1 for final goal 
@@ -60,7 +70,8 @@ public:
 
     void firstMovement();
     void initDemo();
-    void managerKuka();
+    void managerKukaSingle();
+    void managerKukaComplete();
 
 private:
     //Node handle
@@ -71,7 +82,7 @@ private:
 
     //Message Pub
     void publisher(std::vector<double> v1, std::vector<double> v2);
-    ros::Publisher pub1_, pub2_, pub_start_robot_;
+    ros::Publisher pub1_, pub2_, pub_start_robot_, pub_read_hand_;
 
     // Message Sub
     ros::Subscriber sub_check_, sub_go_;
@@ -82,6 +93,8 @@ private:
 
     std::string control_topic_left_;
     
+    void pubHand(int x);
+    void waiting();
 
     // NON UTILIZZATE
     void getInitPosition(std::vector<double> v);  // IMPORTAN have to define EE link 

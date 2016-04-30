@@ -4,6 +4,7 @@
 	<rosparam file="$(find disney_demo)/config/controllers_select.yaml" command="load"/>
 	
  	
+	<node  name="read_hand_node" pkg="disney_demo" type="read_hand_node" respawn="false" output="screen"/> 
 	<node  name="disney_demo_node" pkg="disney_demo" type="disney_demo_node" respawn="false" output="screen"/> 
 	
 

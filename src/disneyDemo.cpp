@@ -8,22 +8,25 @@ disneyDemo::disneyDemo()
     pub_start_robot_ = nh_.advertise<std_msgs::Bool>("/left_arm/"+ control_topic_left_ + "/start_controller", 100);
 	pub1_ = nh_.advertise<geometry_msgs::Pose>("/left_arm/"+ control_topic_left_ +"/command1", 3); 	
 	pub2_ = nh_.advertise<geometry_msgs::Pose>("/left_arm/"+ control_topic_left_ +"/command2", 3); 	
-	
-	sub_check_ = nh_.subscribe("left_arm/"+control_topic_left_ +"/check", 1, &disneyDemo::check, this);
-	sub_go_    = nh_.subscribe("go",1,&disneyDemo::go, this);
 
-	check_ = false;
+   pub_read_hand_ = nh_.advertise<std_msgs::Int16>("/read_hand", 3);
+   
+   sub_check_ = nh_.subscribe("left_arm/"+control_topic_left_ +"/check", 1, &disneyDemo::check, this);
+   sub_go_    = nh_.subscribe("go",1,&disneyDemo::go, this);
+   
+	
+   check_ = false;
 	go_    = false;
 
 	home1_.resize(7);
-    back1_.resize(7);
-    nh_.param<std::vector<double>>("home1", home1_, std::vector<double>{0,0,0,0,0,0,0});
-    nh_.param<std::vector<double>>("back1", back1_, std::vector<double>{0,0,0,0,0,0,0});
+  back1_.resize(7);
+  nh_.param<std::vector<double>>("home1", home1_, std::vector<double>{0,0,0,0,0,0,0});
+  nh_.param<std::vector<double>>("back1", back1_, std::vector<double>{0,0,0,0,0,0,0});
 
-   	home2_.resize(7);
-    back2_.resize(7);
-    nh_.param<std::vector<double>>("home2", home2_, std::vector<double>{0,0,0,0,0,0,0});
-    nh_.param<std::vector<double>>("back2", back2_, std::vector<double>{0,0,0,0,0,0,0});
+ 	home2_.resize(7);
+  back2_.resize(7);
+  nh_.param<std::vector<double>>("home2", home2_, std::vector<double>{0,0,0,0,0,0,0});
+  nh_.param<std::vector<double>>("back2", back2_, std::vector<double>{0,0,0,0,0,0,0});
 }
 
 
@@ -79,6 +82,13 @@ void disneyDemo::initDemo()
     sleep(1);
 
 
+    // set stiffness
+    ros::Publisher pub_stiffness;
+    pub_stiffness = nh_.advertise<std_msgs::Float64>("/left_arm/stiffness_scale", 3);
+    std_msgs::Float64 f;
+    f.data = 0.1;
+    pub_stiffness.publish(f);
+
     // start controller
 	std_msgs::Bool bool_msg;						
     bool_msg.data = true;
@@ -108,10 +118,12 @@ void disneyDemo::firstMovement()
 
 
 // =============================================================================================
-//																				   initVariables
+//																				  singleMovement
 // =============================================================================================
-void disneyDemo::managerKuka()
+void disneyDemo::managerKukaSingle()
 {
+    std_msgs::Int16 m;
+
     std::cout<<"\033[32m\033[1mBUMB! \033[0m\n";
 
     nh_.param<std::vector<double>>("home1", home1_);
@@ -123,18 +135,106 @@ void disneyDemo::managerKuka()
 
 	if(go_)
 	{	
+      m.data = 2; 
+      pub_read_hand_.publish(m);
+      ros::spinOnce();
+
 		publisher(back1_, back2_);
+
+      m.data = 3; 
+      pub_read_hand_.publish(m);
+      ros::spinOnce();
+
 		publisher(home1_, home2_);
 	}
 
-	go_ = false;
+    // sent to hand new command
+    m.data = 1; 
+    pub_read_hand_.publish(m);
+    go_ = false;
 	ros::spinOnce();
 }
 
 
 
 // =============================================================================================
-//																				   publisher
+//                                                                              completeMovement
+// =============================================================================================
+void disneyDemo::managerKukaComplete()
+{
+    std::vector<double> start, one, two, home2a;
+
+    start.resize(7);
+    one.resize(7);
+    two.resize(7);
+    home2a.resize(7);
+
+    nh_.param<std::vector<double>>("start", start, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("one", one, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("two", two, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("home1", home1_, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("home2a", home2a, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("back1", back1_, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("home2", home2_, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("back2", back2_, std::vector<double>{0,0,0,0,0,0,0});
+
+
+    publisher(start, home2_);
+    std::cout<<"\033[32m\033[1mSTART \033[0m\n";
+    pubHand(WAITING_BUMP);
+    waiting();    
+
+
+    publisher(one, home2_);
+    pubHand(CLOSE_HAND_BIT);
+    publisher(start, home2_);
+    std::cout<<"\033[32m\033[1mONE \033[0m\n";
+    pubHand(WAITING_BUMP);
+    waiting();
+    
+    
+    publisher(two, home2_);
+    pubHand(CLOSE_HAND_FAST);
+    publisher(home1_, home2_);
+    std::cout<<"\033[32m\033[1mTWO \033[0m\n";
+    pubHand(WAITING_BUMP);
+    waiting();
+
+    pubHand(OPEN_HAND_SLOW);    
+    publisher(back1_ , back2_);
+    ros::spinOnce();
+}
+
+
+// =============================================================================================
+//                                                                                       pubHand
+// =============================================================================================
+void disneyDemo::pubHand(int x)
+{   
+    std_msgs::Int16 m;
+    m.data = x; 
+    pub_read_hand_.publish(m);
+    ros::spinOnce();
+}
+
+// =============================================================================================
+//                                                                                       pubHand
+// =============================================================================================
+void disneyDemo::waiting()
+{   
+    while(!go_)
+    {       
+        // std::cout<<"\033[32m\033[1mBUMP! \033[0m\n";
+        ros::spinOnce();
+    }
+    go_ = false;
+}
+
+
+
+
+// =============================================================================================
+//																				       publisher
 // =============================================================================================
 void disneyDemo::publisher(std::vector<double> v1, std::vector<double> v2)
 {
@@ -144,21 +244,21 @@ void disneyDemo::publisher(std::vector<double> v1, std::vector<double> v2)
 	q2.setRPY(v2[0]*(M_PI/180),v2[1]*(M_PI/180),v2[2]*(M_PI/180));
 
 	geometry_msgs::Pose local_msg1, local_msg2;
-    local_msg1.position.x = v1[3];
-    local_msg1.position.y = v1[4];
-    local_msg1.position.z = v1[5];
-    local_msg1.orientation.x  = q1.x();
-    local_msg1.orientation.y =  q1.y();
-    local_msg1.orientation.z  = q1.z();
-    local_msg1.orientation.w  = q1.w();
+   local_msg1.position.x = v1[3];
+   local_msg1.position.y = v1[4];
+   local_msg1.position.z = v1[5];
+   local_msg1.orientation.x  = q1.x();
+   local_msg1.orientation.y =  q1.y();
+   local_msg1.orientation.z  = q1.z();
+   local_msg1.orientation.w  = q1.w();
 
-    local_msg2.position.x = v2[3];
-    local_msg2.position.y = v2[4];
-    local_msg2.position.z = v2[5];
-    local_msg2.orientation.x  = q2.x();
-    local_msg2.orientation.y =  q2.y();
-    local_msg2.orientation.z  = q2.z();
-    local_msg2.orientation.w  = q2.w();
+   local_msg2.position.x = v2[3];
+   local_msg2.position.y = v2[4];
+   local_msg2.position.z = v2[5];
+   local_msg2.orientation.x  = q2.x();
+   local_msg2.orientation.y =  q2.y();
+   local_msg2.orientation.z  = q2.z();
+   local_msg2.orientation.w  = q2.w();
 
 
 	pub1_.publish(local_msg1);
@@ -168,7 +268,7 @@ void disneyDemo::publisher(std::vector<double> v1, std::vector<double> v2)
 
 	while(!check_ )
 	{
-    	std::cout<<"\033[31m\033[1mMovement! \033[0m\n";
+    	// std::cout<<"\033[31m\033[1mMovement! \033[0m\n";
 		ros::spinOnce();
 	}
 
