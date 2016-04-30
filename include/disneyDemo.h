@@ -82,7 +82,8 @@ private:
 
     //Message Pub
     void publisher(std::vector<double> v1, std::vector<double> v2);
-    ros::Publisher pub1_, pub2_, pub_start_robot_, pub_read_hand_;
+    ros::Publisher pub1_, pub2_, pub_start_robot_, pub_read_hand_, pub_stiffness_;
+
 
     // Message Sub
     ros::Subscriber sub_check_, sub_go_;

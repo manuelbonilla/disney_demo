@@ -8,25 +8,26 @@ disneyDemo::disneyDemo()
     pub_start_robot_ = nh_.advertise<std_msgs::Bool>("/left_arm/"+ control_topic_left_ + "/start_controller", 100);
 	pub1_ = nh_.advertise<geometry_msgs::Pose>("/left_arm/"+ control_topic_left_ +"/command1", 3); 	
 	pub2_ = nh_.advertise<geometry_msgs::Pose>("/left_arm/"+ control_topic_left_ +"/command2", 3); 	
+    pub_stiffness_ = nh_.advertise<std_msgs::Float64>("left_arm/stiffness_scale", 3);
 
-   pub_read_hand_ = nh_.advertise<std_msgs::Int16>("/read_hand", 3);
+    pub_read_hand_ = nh_.advertise<std_msgs::Int16>("/read_hand", 3);
    
-   sub_check_ = nh_.subscribe("left_arm/"+control_topic_left_ +"/check", 1, &disneyDemo::check, this);
-   sub_go_    = nh_.subscribe("go",1,&disneyDemo::go, this);
+    sub_check_ = nh_.subscribe("left_arm/"+control_topic_left_ +"/check", 1, &disneyDemo::check, this);
+    sub_go_    = nh_.subscribe("go",1,&disneyDemo::go, this);
    
 	
-   check_ = false;
+    check_ = false;
 	go_    = false;
 
 	home1_.resize(7);
-  back1_.resize(7);
-  nh_.param<std::vector<double>>("home1", home1_, std::vector<double>{0,0,0,0,0,0,0});
-  nh_.param<std::vector<double>>("back1", back1_, std::vector<double>{0,0,0,0,0,0,0});
+    back1_.resize(7);
+    nh_.param<std::vector<double>>("home1", home1_, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("back1", back1_, std::vector<double>{0,0,0,0,0,0,0});
 
  	home2_.resize(7);
-  back2_.resize(7);
-  nh_.param<std::vector<double>>("home2", home2_, std::vector<double>{0,0,0,0,0,0,0});
-  nh_.param<std::vector<double>>("back2", back2_, std::vector<double>{0,0,0,0,0,0,0});
+    back2_.resize(7);
+    nh_.param<std::vector<double>>("home2", home2_, std::vector<double>{0,0,0,0,0,0,0});
+    nh_.param<std::vector<double>>("back2", back2_, std::vector<double>{0,0,0,0,0,0,0});
 }
 
 
@@ -83,16 +84,16 @@ void disneyDemo::initDemo()
 
 
     // set stiffness
-    ros::Publisher pub_stiffness;
-    pub_stiffness = nh_.advertise<std_msgs::Float64>("/left_arm/stiffness_scale", 3);
     std_msgs::Float64 f;
     f.data = 0.1;
-    pub_stiffness.publish(f);
+    pub_stiffness_.publish(f);
+    ros::spinOnce();
+    sleep(1);
+    ros::spinOnce();
 
     // start controller
 	std_msgs::Bool bool_msg;						
     bool_msg.data = true;
-
     pub_start_robot_.publish(bool_msg);
     ROS_INFO_STREAM("Starting Robot");
     ros::spinOnce();
