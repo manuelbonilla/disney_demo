@@ -321,13 +321,15 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
         //     if (joint_des_states_.q(i) > joint_limits_.max(i))
         //         joint_des_states_.q(i) = joint_limits_.max(i);
         // }
-        if (Equal(x_, x_des_, 0.09))
+        if (Equal(x_.p, x_des_.p, 0.08))
         {
-            std_msgs::Bool bool_msg;                        
-            bool_msg.data = true;
-            pub_check.publish(bool_msg);
-            ROS_INFO("On target 1");
-            cmd_flag_ = 0;
+            if (Equal(x_.M, x_des_.M, 0.25)){
+                std_msgs::Bool bool_msg;                        
+                bool_msg.data = true;
+                pub_check.publish(bool_msg);
+                ROS_INFO("On target 1");
+                cmd_flag_ = 0;
+            }
         }
 
 

@@ -127,7 +127,27 @@ target_link_libraries(read_hand_node
 )
 
 
+# Declare a C++ executable
+add_executable(read_hand_double_node src/read_hand_double.cpp src/qbmove_communications.cpp)
+## Add cmake target dependencies of the executable
+## same as for the library above
+add_dependencies(read_hand_double_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# Specify libraries to link a library or executable target against
+target_link_libraries(read_hand_double_node
+  ${catkin_LIBRARIES}  ${catkin_INCLUDE_DIRS}
+)
 
+
+
+# Declare a C++ executable
+add_executable(audio_node src/audio.cpp)
+## Add cmake target dependencies of the executable
+## same as for the library above
+add_dependencies(audio_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# Specify libraries to link a library or executable target against
+target_link_libraries(audio_node
+  ${catkin_LIBRARIES}  ${catkin_INCLUDE_DIRS}
+)
 
 
 

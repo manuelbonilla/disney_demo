@@ -85,7 +85,7 @@ void disneyDemo::initDemo()
 
     // set stiffness
     std_msgs::Float64 f;
-    f.data = 0.1;
+    f.data = 0.02;
     pub_stiffness_.publish(f);
     ros::spinOnce();
     sleep(1);
@@ -186,23 +186,24 @@ void disneyDemo::managerKukaComplete()
     waiting();    
 
 
-    publisher(one, home2_);
+    // publisher(one, home2_);
     pubHand(CLOSE_HAND_BIT);
-    publisher(start, home2_);
+    // publisher(start, home2_);
     std::cout<<"\033[32m\033[1mONE \033[0m\n";
     pubHand(WAITING_BUMP);
     waiting();
     
     
-    publisher(two, home2_);
+    // publisher(two, home2_);
     pubHand(CLOSE_HAND_FAST);
     publisher(home1_, home2_);
     std::cout<<"\033[32m\033[1mTWO \033[0m\n";
     pubHand(WAITING_BUMP);
     waiting();
-
-    pubHand(OPEN_HAND_SLOW);    
+    
+     pubHand(OPEN_HAND_SLOW);    
     publisher(back1_ , back2_);
+    sleep(1);
     ros::spinOnce();
 }
 

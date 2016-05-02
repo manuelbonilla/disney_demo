@@ -1,10 +1,14 @@
 <launch>
 
 	<rosparam file="$(find disney_demo)/config/parameters.yaml" command="load"/>
+	<rosparam file="$(find disney_demo)/config/posmot.yaml" command="load"/>
 	<rosparam file="$(find disney_demo)/config/controllers_select.yaml" command="load"/>
 	
  	
-	<node  name="read_hand_node" pkg="disney_demo" type="read_hand_node" respawn="false" output="screen"/> 
+	<!-- <node  name="read_hand_node" pkg="disney_demo" type="read_hand_node" respawn="false" output="screen"/>  -->
+	<node  name="read_hand_double_node" pkg="disney_demo" type="read_hand_double_node" respawn="false" output="screen"/> 
+	<node  name="audio_node" pkg="disney_demo" type="audio_node" respawn="false" output="screen"/> 
+
 	<node  name="disney_demo_node" pkg="disney_demo" type="disney_demo_node" respawn="false" output="screen"/> 
 	
 
