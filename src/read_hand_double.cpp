@@ -72,7 +72,7 @@ double imu_norm = 0.0;
 
 int activated_;
 
-#define HAND_CLOSED 17000
+#define HAND_CLOSED 19000
 
 using namespace std;
 
@@ -141,6 +141,9 @@ int main(int argc, char** argv)
 	last_accel[0] = imu_values[0];
 	last_accel[1] = imu_values[1];
 	last_accel[2] = imu_values[2];
+	imu_values[3] = 0;
+	imu_values[4] = 0;
+	imu_values[5] = 0;
 	last_norm = imu_norm;
 
 	// opening hand
@@ -193,8 +196,8 @@ int main(int argc, char** argv)
 					values[1] = computeTrajectory1(temp);
 					commSetInputs(&comm_settings_t, 0, values);
 
-					cout << "\nvalue[0]: " << values[0] << std::endl;
-					cout << "values[1]: "  << values[1] << std::endl;
+					// cout << "\nvalue[0]: " << values[0] << std::endl;
+					// cout << "values[1]: "  << values[1] << std::endl;
 
 					rate.sleep();
 					temp += 0.01;
@@ -207,8 +210,8 @@ int main(int argc, char** argv)
 
 			case 3:
 				ROS_INFO_STREAM("Closing Hand - Bit Mode");
-				values[0] = 5000;
-				values[1] = 5000;   // motor 2		
+				values[0] = 8000;
+				values[1] = 8000;   // motor 2		
 				commSetInputs(&comm_settings_t, 0, values);
 	    		usleep(250000);
 	    		break;

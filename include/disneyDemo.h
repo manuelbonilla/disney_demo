@@ -82,12 +82,12 @@ private:
 
     //Message Pub
     void publisher(std::vector<double> v1, std::vector<double> v2);
-    ros::Publisher pub1_, pub2_, pub_start_robot_, pub_read_hand_, pub_stiffness_;
+    ros::Publisher pub1_, pub2_, pub_start_robot_, pub_read_hand_, pub_stiffness_, pub_first_time_;
 
 
     // Message Sub
     ros::Subscriber sub_check_, sub_go_;
-    bool check_, go_;
+    bool check_, go_, prima_volta_;
     void check(std_msgs::Bool bool_msg);
     void go(std_msgs::Bool bool_msg);
 

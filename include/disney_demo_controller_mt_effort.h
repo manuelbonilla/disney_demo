@@ -23,6 +23,8 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
 #include <tf_conversions/tf_kdl.h>
+#include <std_msgs/Int16.h>
+
 
 
 namespace disney_demo
@@ -42,7 +44,7 @@ namespace disney_demo
 
 	private:
 		ros::Subscriber sub_command_, sub_command_2;
-		ros::Subscriber sub_gains_;
+		ros::Subscriber sub_gains_, sub_first_time;
 
 		KDL::Frame x_;		//current pose
 		KDL::Frame x_des_, x_des_2;	//desired pose
@@ -68,12 +70,16 @@ namespace disney_demo
 		int cmd_flag_;
 
 		bool second_task;
+
+		int cont;
 		
 		boost::scoped_ptr<KDL::ChainJntToJacSolver> jnt_to_jac_solver_;
 		boost::scoped_ptr<KDL::ChainFkSolverPos_recursive> fk_pos_solver_;
 		boost::scoped_ptr<KDL::ChainIkSolverVel_pinv> ik_vel_solver_;
 		boost::scoped_ptr<KDL::ChainIkSolverPos_NR_JL> ik_pos_solver_;
 		boost::scoped_ptr<KDL::ChainDynParam> id_solver_;
+
+		void firstTime (std_msgs::Int16 m); 
 
 		ros::Publisher pub_error, pub_error2, pub_check, pub_vel;
 		ros::Subscriber sub_start_controller;
