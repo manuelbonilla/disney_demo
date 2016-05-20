@@ -114,8 +114,10 @@ int main(int argc, char** argv)
     double spin_rate = 100;
 	ros::Rate rate(spin_rate);
 
+	std::string hand_port;
+	nh.param<std::string>("/hand_port", hand_port, "/dev/ttyUSB0");
 
-
+	ROS_INFO_STREAM("Hand Port: " << hand_port.c_str());
 
 	/*** hand parameters ***/
 	short int last_accel[3] = {0,0,0};
@@ -123,7 +125,8 @@ int main(int argc, char** argv)
 	int cont = 0;
 	
 
-    openRS485 ( &comm_settings_t , "/dev/ttyUSB0" ) ;       // QB Board Opening
+    openRS485 ( &comm_settings_t , hand_port.c_str() ) ;  
+    // openRS485 ( &comm_settings_t , "/dev/ttyUSB1" ) ;      // QB Board Opening
     sleep(1);
 
 	commActivate(&comm_settings_t, 0, 1);
