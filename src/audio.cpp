@@ -81,8 +81,8 @@ void audio_disney(std_msgs::Bool m)
 {	
 	if(m.data)
 	{	
-		system("mplayer  /home/manuelb/manuelb_ws/src/disney_demo/src/BayMax.mp3 >/dev/null 2>&1");
-		// system("mplayer  /home/emanuele/catkin_ws/src/disney_demo/src/BayMax.mp3 >/dev/null 2>&1");
+		// system("mplayer  /home/manuelb/manuelb_ws/src/disney_demo/src/BayMax.mp3 >/dev/null 2>&1");
+		system("mplayer  /home/emanuele/catkin_ws/src/disney_demo/src/BayMax.mp3 >/dev/null 2>&1");
 		// system("mplayer  /home/emanuele/catkin_ws/src/disney_demo/src/BayMax.mp3 >/dev/null 2>&1");
 	}
 }

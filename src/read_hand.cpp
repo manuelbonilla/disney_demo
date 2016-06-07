@@ -73,17 +73,17 @@ int main(int argc, char** argv)
 	ros::init(argc,argv,"read_hand");
     ros::NodeHandle nh;
 
-    ros::Publisher pub;
+    ros::Publisher pub, pub_audio;
     pub = nh.advertise<std_msgs::Bool>("/go", 100);
 	
-	std_msgs::Bool bool_msg;						
+	std_msgs::Bool bool_msg, bool_audio_msg ;						
 	
 	activated_ = false;
 
 	ros::Subscriber sub;
 	sub = nh.subscribe("/read_hand", 1, read_hand_activated);
 
-
+	pub_audio = nh.advertise<std_msgs::Bool>("/audio_disney", 100);
 
 
 	// hand parameters
@@ -137,6 +137,11 @@ int main(int argc, char** argv)
 	    	case 2:
 				ROS_INFO_STREAM("Opening Hand - Slow Mode");
 				// Open SoftHand, while moving fingers up and down
+				
+				bool_audio_msg.data = true;
+	   			pub_audio.publish(bool_audio_msg);
+	   			ros::spinOnce();
+
 				hand_movement = 1;
 				values[0] = HAND_CLOSED;
 				while (hand_movement) 
@@ -181,6 +186,7 @@ int main(int argc, char** argv)
 					// if (!cont && fabs(imu_norm - last_norm) > 250 && fabs(imu_norm - last_norm) < 500
 					// 		&& abs(imu_values[0]-last_accel[0]) > 100 && abs(imu_values[1]-last_accel[1]) < 300 && abs(imu_values[2]-last_accel[2]) < 300)
 					// if (!cont && abs(imu_values[0]-last_accel[0]) > 300 && abs(imu_values[1]-last_accel[1]) < 300 && abs(imu_values[2]-last_accel[2]) < 300)
+					std::cout << "gyro[0]: " << abs(imu_values[3]) << "gyro[1]: " << abs(imu_values[3]) <<  "gyro[2]: " << abs(imu_values[3]) << std::endl;
 					if (abs(imu_values[3]) > 650 || abs(imu_values[4]) > 650 || abs(imu_values[5]) > 650 )
 					{
 						cout << "Bump detected" << endl;
@@ -197,7 +203,6 @@ int main(int argc, char** argv)
 						cont = 1;
 					}
 
-					
 					last_accel[0] = imu_values[0];
 					last_accel[1] = imu_values[1];
 					last_accel[2] = imu_values[2];
