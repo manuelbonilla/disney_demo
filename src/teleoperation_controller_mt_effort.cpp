@@ -92,7 +92,7 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
     std_msgs::Float64MultiArray q_des;
 
     KDL::Twist x_err_2;
-    for (int i = 0; i < joint_handles_.size(); i++)
+    for (unsigned int i = 0; i < joint_handles_.size(); i++)
     {
         joint_msr_states_.q(i) = joint_handles_[i].getPosition();
     }
@@ -302,12 +302,12 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
         saturateJointVelocities(joint_des_states_.qdot, 0.5);
 
         // integrating q_dot -> getting q (Euler method)
-        for (int i = 0; i < joint_handles_.size(); i++)
+        for (unsigned int i = 0; i < joint_handles_.size(); i++)
             joint_des_states_.q(i) += period.toSec() * joint_des_states_.qdot(i);
 
         saturateJointPositions(joint_des_states_.q);
     
-        for (int i = 0; i < joint_handles_.size(); i++)
+        for (unsigned int i = 0; i < joint_handles_.size(); i++)
         {
             q_des.data.push_back(joint_des_states_.qdot(i));
         }
@@ -340,7 +340,7 @@ void TeleoperationControllerMTEffort::update(const ros::Time& time, const ros::D
         // }
        
         // set controls for joints
-        for (int i = 0; i < joint_handles_.size(); i++)
+        for (unsigned int i = 0; i < joint_handles_.size(); i++)
         {
             joint_handles_[i].setCommand(joint_des_states_.q(i));
         }
